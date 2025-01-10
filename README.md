@@ -1,10 +1,5 @@
 # Ataxx Game Commands
 
-## Overview
-This document outlines all the commands available to interact with the Ataxx game via the CLI. Each command serves a specific purpose, such as logging in, starting a game, making moves, or resuming an active game.
-
-## Commands
-
 ### 1. Login
 **Command:**
 ```bash
