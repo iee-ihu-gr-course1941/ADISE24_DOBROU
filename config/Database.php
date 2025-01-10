@@ -11,17 +11,13 @@ class Database
     public static function connect()
     {
         if (self::$conn == null) {
-            try {
-                self::$conn = new PDO(
-                    'mysql:host=' . self::$host . ';port=' . self::$port . ';dbname=' . self::$db_name,
-                    self::$username,
-                    self::$password
-                );
-                self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            } catch (PDOException $e) {
-                die('Database Connection Failed: ' . $e->getMessage());
+            self::$conn = new mysqli(self::$host, self::$username, self::$password, self::$db_name, self::$port);
+
+            if (self::$conn->connect_error) {
+                die('Database Connection Failed: ' . self::$conn->connect_error);
             }
         }
         return self::$conn;
     }
 }
+?>
