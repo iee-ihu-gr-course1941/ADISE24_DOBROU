@@ -97,5 +97,4 @@ php cli.php list-games 1
 ## Notes
 - All game states and player data are stored in the database.
 - Ensure the database is properly configured in `config/Database.php`.
-- Use the `list-games` command to find active games before resuming or making a move.
 

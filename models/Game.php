@@ -3,6 +3,13 @@ require_once 'config/Database.php';
 
 class Game
 {
+    /**
+     * Create a new game and store it in the database.
+     *
+     * @param int $bluePlayerId
+     * @param int $redPlayerId
+     * @return int The ID of the newly created game.
+     */
     public static function create($bluePlayerId, $redPlayerId)
     {
         $db = Database::connect();
@@ -21,6 +28,11 @@ class Game
         return $db->lastInsertId();
     }
 
+    /**
+     * Initialize the game board with starting positions.
+     *
+     * @param int $gameId
+     */
     public static function initializeBoard($gameId)
     {
         $db = Database::connect();
@@ -56,6 +68,12 @@ class Game
         }
     }
 
+    /**
+     * Get all active games for a player.
+     *
+     * @param int $playerId
+     * @return array A list of active games.
+     */
     public static function getActiveGames($playerId)
     {
         $db = Database::connect();
@@ -70,6 +88,12 @@ class Game
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Render the game board into a human-readable string.
+     *
+     * @param array $board The board data.
+     * @return string The rendered board.
+     */
     public static function renderBoard($board)
     {
         $output = '';
@@ -82,15 +106,27 @@ class Game
         return $output;
     }
 
+    /**
+     * Get the game board as a flat associative array.
+     *
+     * @param int $gameId
+     * @return array The board as an associative array.
+     */
     public static function getFlatBoard($gameId)
     {
         $db = Database::connect();
         $query = $db->prepare("SELECT position, occupant FROM state WHERE game_id = :game_id");
         $query->execute([':game_id' => $gameId]);
 
-        return $query->fetchAll(PDO::FETCH_KEY_PAIR); // Returns associative array like ['A1' => 1, 'B2' => 0, ...]
+        return $query->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
+    /**
+     * Get data about a game.
+     *
+     * @param int $gameId
+     * @return array The game data.
+     */
     public static function getGameData($gameId)
     {
         $db = Database::connect();
@@ -99,6 +135,12 @@ class Game
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Get the game board as a 2D array.
+     *
+     * @param int $gameId
+     * @return array The board as a 2D array.
+     */
     public static function getBoard($gameId)
     {
         $db = Database::connect();
@@ -117,6 +159,15 @@ class Game
         return $board;
     }
 
+    /**
+     * Execute a move in the game.
+     *
+     * @param int $gameId
+     * @param string $from
+     * @param string $to
+     * @param string $moveType The type of move ('extend' or 'jump').
+     * @param int $currentPlayer The ID of the player making the move.
+     */
     public static function executeMove($gameId, $from, $to, $moveType, $currentPlayer)
     {
         $db = Database::connect();
@@ -147,6 +198,13 @@ class Game
         }
     }
 
+    /**
+     * Flip adjacent opponent pieces after a move.
+     *
+     * @param int $gameId
+     * @param string $position The position of the new piece.
+     * @param int $currentPlayer The ID of the current player.
+     */
     private static function flipAdjacentPieces($gameId, $position, $currentPlayer)
     {
         $db = Database::connect();
@@ -171,6 +229,11 @@ class Game
         }
     }
 
+    /**
+     * Switch to the next player's turn.
+     *
+     * @param int $gameId The ID of the game.
+     */
     public static function switchTurn($gameId)
     {
         $db = Database::connect();
@@ -180,7 +243,6 @@ class Game
         $currentTurn = $query->fetchColumn();
 
         $nextTurn = ($currentTurn == 1) ? 2 : 1;
-        error_log("Switching turn: CurrentTurn=$currentTurn, NextTurn=$nextTurn");
 
         $query = $db->prepare("UPDATE games SET current_turn = :next_turn WHERE id = :game_id");
         $query->execute([
@@ -189,6 +251,12 @@ class Game
         ]);
     }
 
+    /**
+     * Get adjacent positions for a given board position.
+     *
+     * @param string $position The board position (e.g., 'A1').
+     * @return array The list of adjacent positions.
+     */
     public static function getAdjacentPositions($position)
     {
         $row = ord($position[0]) - ord('A');
@@ -217,17 +285,26 @@ class Game
         return $adjacentPositions;
     }
 
+    /**
+     * Get the current turn for the game.
+     *
+     * @param int $gameId
+     * @return int The current turn (1 for blue, 2 for red).
+     */
     public static function getCurrentTurn($gameId)
     {
         $db = Database::connect();
         $query = $db->prepare("SELECT current_turn FROM games WHERE id = :game_id");
         $query->execute([':game_id' => $gameId]);
-        $currentTurn = $query->fetchColumn();
-
-        error_log("Fetched current turn: GameID=$gameId, CurrentTurn=$currentTurn");
-        return (int)$currentTurn; // Ensure it returns an integer
+        return (int) $query->fetchColumn();
     }
 
+    /**
+     * Check if the game has ended.
+     *
+     * @param int $gameId
+     * @return int|false The winner (1 for blue, 2 for red, 0 for draw) or false if the game is ongoing.
+     */
     public static function checkEndgame($gameId)
     {
         $db = Database::connect();

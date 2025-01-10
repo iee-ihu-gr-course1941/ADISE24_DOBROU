@@ -3,6 +3,12 @@ require_once 'models/Game.php';
 
 class GameController
 {
+    /**
+     * List all active games for a player.
+     *
+     * @param int $playerId
+     * @return array An array with the list of active games or an error message.
+     */
     public function listActiveGames($playerId)
     {
         $games = Game::getActiveGames($playerId);
@@ -19,6 +25,13 @@ class GameController
         ];
     }
 
+    /**
+     * Start a new game with two players.
+     *
+     * @param int $bluePlayerId
+     * @param int $redPlayerId
+     * @return array Details of the new game.
+     */
     public function startGame($bluePlayerId, $redPlayerId)
     {
         $gameId = Game::create($bluePlayerId, $redPlayerId);
@@ -31,28 +44,31 @@ class GameController
         ];
     }
 
+    /**
+     * Make a move in the game.
+     *
+     * @param int $gameId
+     * @param int $playerId
+     * @param string $from
+     * @param string $to
+     * @return array Result of the move.
+     */
     public function makeMove($gameId, $playerId, $from, $to)
     {
-        require_once 'models/Game.php';
         require_once 'models/MoveValidator.php';
 
         try {
-            // Use getFlatBoard instead of getBoard
             $board = Game::getFlatBoard($gameId);
 
             $currentTurn = Game::getCurrentTurn($gameId);
             $gameData = Game::getGameData($gameId);
 
-            error_log("CurrentTurn=$currentTurn, PlayerID=$playerId, BluePlayer=" . $gameData['blue_player'] . ", RedPlayer=" . $gameData['red_player']);
             if (
                 ($currentTurn === 1 && $gameData['blue_player'] != $playerId) ||
                 ($currentTurn === 2 && $gameData['red_player'] != $playerId)
             ) {
-                error_log("Turn validation failed: Not your turn!");
                 return ['status' => 'error', 'message' => 'Not your turn!'];
             }
-            error_log("Turn validation passed: It's the player's turn.");
-
 
             $moveType = MoveValidator::isValidMove($from, $to, $board, $playerId);
 
@@ -76,6 +92,12 @@ class GameController
         }
     }
 
+    /**
+     * Show the current state of the game board.
+     *
+     * @param int $gameId
+     * @return array Rendered board or an error message.
+     */
     public function showBoard($gameId)
     {
         $board = Game::getBoard($gameId);
